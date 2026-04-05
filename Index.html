@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Flappy Bird — v3.1 The Disgine Update</title>
+  <style>
+    body { margin:0; background: linear-gradient(#87CEEB, #E0FFFF); font-family:Arial, sans-serif; }
+    /* The canvas background will be controlled by the user setting */
+    canvas { border:2px solid #222; display:block; margin:14px auto; background:transparent; }
+    #homeScreen, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup { text-align:center; }
+    #controls, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup { display:none; }
+    #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup {
+      position:fixed; top:12%; left:50%; transform:translateX(-50%);
+      width:520px; background:white; border:2px solid #333; padding:18px; z-index:100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius:8px;
+    }
+    /* Updated button style for home screen */
+    #homeScreen button {
+      margin: 10px 10px; font-size: 18px; padding: 12px 24px; cursor: pointer;
+      border-radius: 8px; border: 3px solid #0056b3;
+      background: linear-gradient(to bottom, #007BFF, #0056b3);
+      color: white; font-weight: bold; text-transform: uppercase;
+      box-shadow: 0 4px 0 #0056b3; transition: all 0.1s ease;
+    }
+    #homeScreen button:active {
+      box-shadow: 0 1px 0 #0056b3;
+      transform: translateY(3px);
+    }
+    
+    /* Default button styling for popups */
+    button, select, label {
+      margin:6px; font-size:15px; padding:8px 12px; cursor:pointer;
+      border-radius:6px; border:none;
+    }
+    #controls button { background:#0b84ff; color:white; }
+    #settingsPopup button { background:#ff6b6b; color:white; }
+    #customizationPopup button { background:#007BFF; color:white; } 
+    #statsPopup button { background:#6c757d; color:white; } /* New color for stats close button */
+    
+    /* NEW: Style for Custom Mode buttons inside the popup */
+    #customModePopup .mode-btn {
+      display: block;
+      width: 80%;
+      margin: 10px auto;
+      padding: 12px 20px;
+      font-size: 20px;
+      font-weight: bold;
+      background: linear-gradient(to right, #4CAF50, #45a049);
+      color: white;
+      border: 2px solid #38761D;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #customModePopup .mode-btn:hover {
+        background: linear-gradient(to right, #45a049, #4CAF50);
+    }
+
+    button:hover { transform: translateY(-1px); opacity:0.95; }
+    .health { font-size:20px; margin:6px 0; color:#222; }
+    #hud { display:flex; justify-content:space-between; align-items:center; width:920px; margin: 8px auto; color:#222; }
+    #winner { font-size:20px; margin-top:8px; }
+    #restartBtn { display:none; padding:8px 14px; margin-top:10px; }
+    .small { font-size:12px; color:#444; }
+    table.damage { width:100%; border-collapse:collapse; margin-top:8px; }
+    table.damage td, table.damage th { border:1px solid #ddd; padding:6px; text-align:center; }
+    table.damage th { background:#f7f7f7; }
+    
+    /* Styles for About and Stats Scrollable Content */
+    .scrollable-content {
+        max-height: 400px;
+        overflow-y: scroll;
+        padding-right: 15px; /* Space for scrollbar */
+        text-align: left;
+    }
+    .about-section { margin-top:8px; line-height:1.35; }
+    .about-emojis { font-size:18px; }
+    
+    /* New style for customization popup save button */
+    #customizationPopup input, #customizationPopup select { width: calc(100% - 16px); } 
+    
+    /* Stats table style */
+    #statsPopup table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+    }
+    #statsPopup th, #statsPopup td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    #statsPopup th {
+        background-color: #e9ecef;
+        font-weight: bold;
+    }
+    #statsPopup h4 {
+        margin-top: 15px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="homeScreen">
+    <h1>🐤 Flappy Bird — v3.1 The Disgine Update</h1>
+    <div id="highScores"></div>
+    <button onclick="openCustomization()">🎨 Customize Names/Theme</button> 
+    <button onclick="openStats()">📊 Progress / Stats</button> <button onclick="openSettings()">⚙️ Settings</button>
+    <button onclick="openAbout()">ℹ️ About / How to Play</button><br><br>
+    
+    <h3>Custom Mode</h3>
+    <button onclick="openCustomMode()">🎮 Select Game Mode</button>
+    <p class="small">Version: v3.1 — The Disgine Update</p>
+  </div>
+  
+  <div id="customModePopup">
+    <h2>🎮 Custom Mode Selection</h2>
+    <div style="text-align:center;">
+        <button class="mode-btn" onclick="selectMode('racing')">1 RACING (Race to End Flag)</button>
+        <button class="mode-btn" onclick="showComingSoon('Boss')">2 BOSS (Coming Soon)</button>
+        <button class="mode-btn" onclick="showComingSoon('Shooter')">3 SHOOTER (Coming Soon)</button>
+        <button class="mode-btn" onclick="showComingSoon('Check Point')">4 CHECK POINT (Coming Soon)</button>
+    </div>
+    <div style="text-align:right; margin-top:15px;">
+        <button onclick="closeCustomMode()">Close</button>
+    </div>
+  </div>
+
+  <div id="statsPopup">
+    <h2>📊 Player Progress & Stats</h2>
+    <div id="statsContent" class="scrollable-content">
+      </div>
+    <button onclick="closeStats()">Close</button>
+  </div>
+
+  <div id="customizationPopup">
+    <h2>🎨 Customization</h2>
+    <div>
+      <label for="p1Name">Player 1 Name:</label>
+      <input type="text" id="p1Name" maxlength="10" placeholder="Max 10 characters">
+    </div>
+    <div>
+      <label for="p2Name">Player 2 Name:</label>
+      <input type="text" id="p2Name" maxlength="10" placeholder="Max 10 characters">
+    </div>
+    <div>
+      <label for="bgColor">Background Color:</label>
+      <select id="bgColor">
+        <option value="#87CEEB">Sky Blue</option>
+        <option value="#6c757d">Grey (Night)</option>
+        <option value="#f8d7da">Light Red (Lava)</option>
+        <option value="#d4edda">Light Green (Forest)</option>
+        <option value="#fff3cd">Light Yellow (Desert)</option>
+      </select>
+    </div>
+    <button onclick="closeCustomization()">Save & Close</button>
+  </div>
+  <div id="settingsPopup">
+    <h2>⚙️ Settings</h2>
+    <div>
+      <label for="difficulty">Difficulty:</label>
+      <select id="difficulty">
+        <option value="Easy">Easy</option>
+        <option value="Medium">Medium</option>
+        <option value="Hard">Hard</option>
+      </select>
+    </div>
+    <div>
+      <label for="musicToggle">Music:</label>
+      <select id="musicToggle">
+        <option value="On">On</option>
+        <option value="Off">Off</option>
+      </select>
+    </div>
+    <div>
+      <label for="powerUpsToggle">Power-ups:</label>
+      <select id="powerUpsToggle">
+        <option value="On">On</option>
+        <option value="Off">Off</option>
+      </select>
+    </div>
+    <button onclick="closeSettings()">Save & Close</button>
+    <button onclick="resetProgress()">🔄 Reset Progress</button>
+  </div>
+
+  <div id="aboutPopup">
+    <h2>ℹ️ About / How to Play</h2>
+    <div class="scrollable-content"> <div class="about-section">
+        <h4>Game Overview</h4>
+        <p>This is a challenging two-player version of the classic Flappy Bird game, enhanced with health bars, power-ups, and multiple difficulties. The goal is to survive the longest or reach the end flag first.</p>
+        <p class="about-emojis"><strong>Health:</strong> ❤️❤️❤️ ... (9 HP) — each player starts with <strong>9 HP</strong>.</p>
+        <p><strong>Goal:</strong> Fly through the pipes, collect coins, hearts and potions, use the magnet and reach the animated flag at the end to win. Avoid pipes and spikes.</p>
+      </div>
+
+      <div class="about-section">
+        <h4>Custom Modes</h4>
+        <ul>
+          <li><strong>1 RACING:</strong> Classic Flappy Bird, but the first player to reach the animated end flag wins the round!</li>
+          <li><strong>2 BOSS:</strong> (Coming Soon)</li>
+          <li><strong>3 SHOOTER:</strong> (Coming Soon)</li>
+          <li><strong>4 CHECK POINT:</strong> (Coming Soon)</li>
+        </ul>
+      </div>
+      <div class="about-section">
+        <h4>Controls</h4>
+        <ul>
+          <li><strong>Desktop:</strong> Player 1 — <code>W</code> (flap), <code>S</code> (speed boost). Player 2 — <code>↑ Arrow</code> (flap), <code>Space</code> (speed boost).</li>
+          <li><strong>Mobile:</strong> Use the on-screen <em>P1 UP</em> and <em>P2 JUMP</em> buttons. (Speed boost not available on mobile controls).</li>
+        </ul>
+      </div>
+
+      <div class="about-section">
+        <h4>New Items & Power-ups</h4>
+        <table class="damage">
+          <thead>
+            <tr><th>Item</th><th>Effect</th><th>Rarity</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>❤️ Red Heart</td><td>+1 HP</td><td>Common</td></tr>
+            <tr><td>💚 Green Heart</td><td>+3 HP</td><td>Uncommon</td></tr>
+            <tr><td>💖 Pink Heart</td><td>Refill full HP</td><td>Rare</td></tr>
+            <tr><td>💛 Golden Heart</td><td>+1 Temporary HP (15s)</td><td>Very Rare</td></tr>
+            <tr><td>🧪 Purple Potion</td><td>-2 HP (Poison)</td><td>Common</td></tr>
+            <tr><td>💊  Blue Potion</td><td>+2 HP (Healing)</td><td>Rare</td></tr>
+            <tr><td>🟣 Rainbow Potion</td><td>Invulnerability 10s</td><td>Very Rare</td></tr>
+            <tr><td>🧲 Magnet</td><td>Attracts coins/hearts/potions for 15s</td><td>Rare</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="about-section">
+        <h4>Spike & Pipe Damage (per difficulty)</h4>
+        <table class="damage">
+          <thead>
+            <tr><th>Difficulty</th><th>Spike Damage</th><th>Pipe Hit Damage</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Easy</td><td>1 HP (❤️)</td><td>1 HP</td><td>Few spikes, gentle colors — forgiving play.</td></tr>
+            <tr><td>Medium</td><td>2 HP (💔💔)</td><td>2 HP</td><td>More spikes and darker color — watch gaps closely.</td></tr>
+            <tr><td>Hard</td><td>Instant kill (9 HP) — lethal</td><td>Instant kill (9 HP)</td><td>Dense spikes, red pulsing spikes — extremely challenging.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="about-section">
+        <h4>Tips</h4>
+        <ul>
+          <li>Collect coins (💿) and diamonds (💎) to increase your total currency — helpful for unlocks later.</li>
+          <li>Collect hearts and potions to restore HP or gain temporary buffs.</li>
+          <li>Golden heart grants temporary HP that can exceed your max for 15 seconds.</li>
+          <li>Magnet attracts nearby items — look for the glowing aura and magnet icon around your bird when active.</li>
+          <li>Moving obstacles appear sometimes — watch for pipes/spikes that move vertically or horizontally.</li>
+        </ul>
+      </div>
+      
+      <div style="text-align:right; margin-top:8px;">
+        <button onclick="closeAbout()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameContainer">
+    <div id="hud">
+      <div>
+        <div id="scoreDisplay"></div>
+        <div id="healthP1" class="health"></div>
+      </div>
+      <div id="countdown"></div>
+      <div>
+        <div id="scoreDisplay2" style="text-align:right"></div>
+        <div id="healthP2" class="health" style="text-align:right"></div>
+      </div>
+    </div>
+
+    <div id="winner"></div>
+    <div id="controls">
+      <button onmousedown="movePlayer1(-0.22)" onmouseup="movePlayer1(0.06)" ontouchstart="movePlayer1(-0.22)" ontouchend="movePlayer1(0.06)">P1 UP</button>
+      <button onmousedown="movePlayer1Boost(-0.8)" onmouseup="movePlayer1(0.06)" ontouchstart="movePlayer1Boost(-0.8)" ontouchend="movePlayer1(0.06)">P1 SPEED</button>
+
+      <button onmousedown="movePlayer2(-0.22)" onmouseup="movePlayer2(0.06)" ontouchstart="movePlayer2(-0.22)" ontouchend="movePlayer2(0.06)">P2 JUMP</button>
+      <button onmousedown="movePlayer2Boost(-0.8)" onmouseup="movePlayer2(0.06)" ontouchstart="movePlayer2Boost(-0.8)" ontouchend="movePlayer2(0.06)">P2 SPEED</button>
+    </div>
+    <button id="restartBtn" onclick="openCustomMode()">SELECT MODE</button>
+  </div>
+
+  <audio id="bgMusic" loop>
+    <source src="roblox-minecraft-fortnite-video-game-music-299145.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // --- SETTINGS PERSISTENCE ---
+    // Updated SETTINGS_KEY to include customization
+    const SETTINGS_KEY = 'flappySettings_v3_custo'; 
+    let settings = { 
+      difficulty: 'Medium', 
+      music: 'On', 
+      powerUps: 'On',
+      p1Name: 'Player 1', // New setting
+      p2Name: 'Player 2', // New setting
+      bgColor: '#87CEEB' // New setting
+    };
+    
+    // NEW: Game Mode tracking
+    let currentMode = 'racing';
+
+    function loadSettings() {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+      if (saved) settings = {...settings, ...saved}; // Merge saved settings
+      
+      // Settings popup fields
+      document.getElementById('difficulty').value = settings.difficulty;
+      document.getElementById('musicToggle').value = settings.music;
+      document.getElementById('powerUpsToggle').value = settings.powerUps;
+      
+      // Customization popup fields
+      document.getElementById('p1Name').value = settings.p1Name;
+      document.getElementById('p2Name').value = settings.p2Name;
+      document.getElementById('bgColor').value = settings.bgColor;
+    }
+    
+    function saveSettings() {
+      // Settings popup save
+      settings.difficulty = document.getElementById('difficulty').value;
+      settings.music = document.getElementById('musicToggle').value;
+      settings.powerUps = document.getElementById('powerUpsToggle').value;
+
+      // Customization popup save
+      // Ensure names are trimmed and default if empty
+      settings.p1Name = (document.getElementById('p1Name').value || 'Player 1').trim().substring(0,10);
+      settings.p2Name = (document.getElementById('p2Name').value || 'Player 2').trim().substring(0,10);
+      settings.bgColor = document.getElementById('bgColor').value;
+
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      applySettings();
+    }
+    
+    function applySettings() {
+      // FIX: Use the correct ID 'bgMusic' and play/pause logic
+      const bg = document.getElementById('bgMusic');
+      if (settings.music === 'On') bg.play().catch(()=>{});
+      else bg.pause();
+    }
+    
+    function openSettings(){ loadSettings(); document.getElementById('settingsPopup').style.display='block'; }
+    function closeSettings(){ saveSettings(); document.getElementById('settingsPopup').style.display='none'; }
+
+    // Customization popup functions
+    function openCustomization(){ loadSettings(); document.getElementById('customizationPopup').style.display='block'; }
+    function closeCustomization(){ saveSettings(); document.getElementById('customizationPopup').style.display='none'; }
+
+    // About popup functions
+    function openAbout(){ document.getElementById('aboutPopup').style.display='block'; }
+    function closeAbout(){ document.getElementById('aboutPopup').style.display='none'; }
+    
+    // Stats popup functions (including logic to pull and format stats)
+    function openStats(){ 
+        updateStatsDisplay();
+        document.getElementById('statsPopup').style.display='block'; 
+    }
+    function closeStats(){ document.getElementById('statsPopup').style.display='none'; }
+    
+    // NEW: Custom Mode Popup functions
+    function openCustomMode(){
+        document.getElementById('customModePopup').style.display='block';
+    }
+    function closeCustomMode(){
+        document.getElementById('customModePopup').style.display='none';
+    }
+
+    // NEW: Coming Soon message function
+    function showComingSoon(modeName) {
+        alert(`Mode ${modeName} is COMING SOON!`);
+    }
+
+    function updateStatsDisplay(){
+        const container = document.getElementById('statsContent');
+        const totalCoinsP1 = +localStorage.getItem('totalCoinsP1') || 0;
+        const totalCoinsP2 = +localStorage.getItem('totalCoinsP2') || 0;
+        const totalDiamondsP1 = +localStorage.getItem('totalDiamondsP1') || 0; 
+        const totalDiamondsP2 = +localStorage.getItem('totalDiamondsP2') || 0; 
+
+        // NOTE: Removed confusing unused logic for estimating diamonds.
+
+        container.innerHTML = `
+            <h4>🏆 High Score (Frames Survived)</h4>
+            <table>
+                <thead>
+                    <tr><th>Player</th><th>High Score (Frames)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>${settings.p1Name}</td><td>${highScore1}</td></tr>
+                    <tr><td>${settings.p2Name}</td><td>${highScore2}</td></tr>
+                </tbody>
+            </table>
+            
+            <h4>🎉 Wins (Reached Flag or Outlived Opponent)</h4>
+            <table>
+                <thead>
+                    <tr><th>Player</th><th>Total Wins</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>${settings.p1Name}</td><td>${winsP1}</td></tr>
+                    <tr><td>${settings.p2Name}</td><td>${winsP2}</td></tr>
+                </tbody>
+            </table>
+
+            <h4>💰 Total Currency Collected</h4>
+            <table>
+                <thead>
+                    <tr><th>Player</th><th>Coins 💿</th><th>Diamonds 💎</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>${settings.p1Name}</td><td>${totalCoinsP1}</td><td>${totalDiamondsP1}</td></tr>
+                    <tr><td>${settings.p2Name}</td><td>${totalDiamondsP2}</td><td>${totalDiamondsP2}</td></tr>
+                </tbody>
+            </table>
+            <p class="small" style="text-align:center;margin-top:15px;">**Note: High Scores and Currency are saved across games.**</p>
+        `;
+    }
+
+
+    loadSettings(); applySettings();
+
+    // --- GAME VARIABLES ---
+    let isMobile = false; // This is now set based on the control type chosen for the mode, but desktop/mobile controls are merged into one racing mode for simplicity.
+    let player1, player2, score1, score2;
+    // ... (rest of game variables)
+    let myObstacles = [], mySpikes = [], myCoins = [], myItems = [], particles = [];
+    let player1Alive = true, player2Alive = true;
+    let eliminationFrame1 = null, eliminationFrame2 = null, gameEndedByWin = false;
+    let backgroundComp, endPlatform = null, endFlag = null;
+    let highScore1 = +localStorage.getItem('highScoreP1') || 0;
+    let highScore2 = +localStorage.getItem('highScoreP2') || 0;
+    let winsP1 = +localStorage.getItem('winsP1') || 0;
+    let winsP2 = +localStorage.getItem('winsP2') || 0;
+    let totalCoinsP1 = +localStorage.getItem('totalCoinsP1') || 0;
+    let totalCoinsP2 = +localStorage.getItem('totalCoinsP2') || 0;
+    // NEW: Total diamonds tracking (coins with value 10)
+    let totalDiamondsP1 = +localStorage.getItem('totalDiamondsP1') || 0; 
+    let totalDiamondsP2 = +localStorage.getItem('totalDiamondsP2') || 0; 
+    
+    let coinsCollectedP1 = 0, coinsCollectedP2 = 0;
+    let diamondsCollectedP1 = 0, diamondsCollectedP2 = 0; // New temp diamond counter
+
+    // Health + hit cooldown
+    const MAX_HEALTH = 9;
+    let hp1 = MAX_HEALTH, hp2 = MAX_HEALTH;
+    let tempHpExpire1 = 0, tempHpExpire2 = 0; // frames remaining for golden heart buff
+    let hitCooldownFrames1 = 0, hitCooldownFrames2 = 0; // frames until can be hit again
+
+    // Magnet constants
+    const MAGNET_RADIUS = 200;
+    const MAGNET_DURATION_FRAMES = 15 * 60; // 15 seconds at 60fps (game runs at ~50fps but we use frame counts)
+    // Items rarities handled probabilistically
+
+    function updateHighScoresDisplay(){
+      document.getElementById('highScores').innerHTML =
+        `🏆 High Score P1: ${highScore1} &nbsp;&nbsp; 🏆 High Score P2: ${highScore2}`;
+    }
+    updateHighScoresDisplay();
+
+    // MODIFIED: This function now accepts the mode parameter
+    function selectMode(mode){
+      closeCustomMode(); // Close the mode selection popup
+      currentMode = mode;
+      
+      // Determine if we show mobile controls based on screen size, not just mode selection
+      // We will now rely on the game to handle desktop key events regardless
+      // isMobile = (mode === 'mobile'); // Keeping this line commented as it was confusing
+
+      document.getElementById('homeScreen').style.display='none';
+      document.getElementById('gameContainer').style.display='block';
+      
+      // Check screen width to determine if mobile controls should be displayed
+      // And we now include the speed boost buttons for mobile
+      if (window.innerWidth < 1000) { 
+          document.getElementById('controls').style.display='flex'; // Use flex to space buttons
+          isMobile = true;
+      } else {
+          document.getElementById('controls').style.display='none';
+          isMobile = false;
+      }
+
+      // The core game logic (Flappy Bird to the end flag) is now the "racing" mode.
+      if (mode === 'racing') {
+        document.getElementById('winner').innerHTML = `Mode: ${mode.toUpperCase()} - Race to the Flag`;
+        startCountdown();
+      } else {
+        // This is a placeholder for future modes, though the button handlers already call 'Coming Soon'
+        document.getElementById('winner').innerHTML = `ERROR: Mode ${mode} not yet implemented.`;
+        document.getElementById('restartBtn').style.display='inline'; // Allow reselection
+      }
+    }
+
+    function startCountdown(){
+      let counter = 3;
+      const countdownEl = document.getElementById('countdown');
+      countdownEl.textContent = `Game starts in: ${counter}`;
+      const iv = setInterval(()=> {
+        counter--;
+        if (counter === 0) {
+          clearInterval(iv);
+          countdownEl.textContent='GO!';
+          setTimeout(()=> countdownEl.textContent='', 700);
+          startGame();
+        } else countdownEl.textContent = `Game starts in: ${counter}`;
+      }, 1000);
+    }
+
+    // Gameplay tuning values by difficulty (will be selected when startGame runs)
+    let obstacleSpeed = 2;
+    let spawnIntervalFrames = 130;
+    let pipeGap = 150;
+    let spikeDensity = 0.6; // 0..1 - how packed spikes are across pipe top/bottom
+    let damageMap = { Easy:1, Medium:2, Hard:9 }; // damage dealt per hit
+    let spikeEffectHardPulse = false; // pulse effect toggle
+    let itemSettings = { magnetChance: 0.10, heartChances: {red:0.35, green:0.12, pink:0.03, gold:0.02}, potionChances: {poison:0.35, heal:0.08, rainbow:0.02} };
+
+    function startGame(){
+      // Set the canvas background color from customization settings
+      myGameArea.canvas.style.backgroundColor = settings.bgColor; 
+      
+      const diff = settings.difficulty;
+      if (diff === 'Easy') { obstacleSpeed = 1.5; spawnIntervalFrames = 160; pipeGap = 180; spikeDensity = 0.35; spikeEffectHardPulse=false; }
+      else if (diff === 'Medium') { obstacleSpeed = 2; spawnIntervalFrames = 130; pipeGap = 150; spikeDensity = 0.6; spikeEffectHardPulse=false; }
+      else { obstacleSpeed = 3; spawnIntervalFrames = 110; pipeGap = 120; spikeEffectHardPulse=true; }
+
+      loadBackground();
+      backgroundComp.speedX = -1;
+      // Pass player names to emojiBird
+      player1 = new emojiBird(60, 240, ['✈1'], settings.p1Name); player1.magnet = false; player1.magnetTimer = 0; player1.tempHp = 0; player1.invuln = 0;
+      player2 = new emojiBird(140, 240, ['✈2'], settings.p2Name); player2.magnet = false; player2.magnetTimer = 0; player2.tempHp = 0; player2.invuln = 0;
+      player1.gravity = player2.gravity = 0.09;
+      score1 = new component('20px','Consolas','black',20,30,'text');
+      score2 = new component('20px','Consolas','black',820,30,'text');
+      coinsCollectedP1 = coinsCollectedP2 = 0;
+      diamondsCollectedP1 = diamondsCollectedP2 = 0; // Reset diamond counter
+      player1Alive = player2Alive = true;
+      eliminationFrame1 = eliminationFrame2 = null;
+      myObstacles = []; mySpikes = []; myCoins = []; myItems = []; particles = []; endPlatform = endFlag = null; gameEndedByWin = false;
+      hp1 = hp2 = MAX_HEALTH;
+      tempHpExpire1 = tempHpExpire2 = 0;
+      hitCooldownFrames1 = hitCooldownFrames2 = 0;
+      // MODIFIED: Restart button now goes back to mode select
+      document.getElementById('restartBtn').onclick = openCustomMode; 
+      document.getElementById('restartBtn').textContent = 'SELECT MODE';
+      document.getElementById('restartBtn').style.display='none';
+      document.getElementById('winner').innerHTML='';
+      myGameArea.start();
+      updateHealthHUD();
+    }
+
+    function loadBackground(){
+      backgroundComp = new component(960,540,'background',0,0,'background');
+      backgroundComp.image = new Image();
+      backgroundComp.image.src = '152930c9-8d02-4b31-81dd-043e0562a83d.png';
+    }
+
+    const myGameArea = {
+      canvas: document.createElement('canvas'),
+      start() {
+        this.canvas.width = 960; this.canvas.height = 540;
+        this.context = this.canvas.getContext('2d');
+        // FIX: Insert canvas into gameContainer instead of body.firstChild
+        const gameContainer = document.getElementById('gameContainer');
+        // Ensure only one canvas exists before inserting
+        if(gameContainer.firstChild && gameContainer.firstChild.tagName === 'CANVAS') {
+            gameContainer.removeChild(gameContainer.firstChild);
+        }
+        gameContainer.insertBefore(this.canvas, gameContainer.firstChild);
+        this.frameNo = 0;
+        // ensure previously set interval cleared
+        clearInterval(this.interval);
+        this.interval = setInterval(updateGameArea, 20);
+        // NEW: Start time for timer calculation (if needed for a separate display)
+        this.startTime = Date.now(); 
+      },
+      clear() { this.context.clearRect(0,0,this.canvas.width,this.canvas.height); }
+    };
+
+    // --- ENTITIES: Bird, Component, Coin, Spike, Particle, Item ---
+    // Updated emojiBird to accept and store 'name'
+    function emojiBird(x,y,frames, name){
+      this.width = 36; this.height = 36; this.x = x; this.y = y;
+      this.gravity = 0; this.gravitySpeed = 0; this.frames = frames; this.frameIndex = 0;
+      this.name = name; // Store the player name
+      this.update = ()=>{ 
+        const ctx = myGameArea.context;
+        ctx.save();
+        
+        // Draw the player name above the bird
+        ctx.font = '12px Arial';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        // Add pulse effect to name when invulnerable
+        if (this.invuln > 0) {
+            ctx.fillStyle = `rgba(0, 123, 255, ${0.8 + 0.2 * Math.sin(myGameArea.frameNo / 4)})`;
+            ctx.shadowColor = 'blue';
+            ctx.shadowBlur = 8;
+        }
+        ctx.fillText(this.name, this.x + 18, this.y - 8); 
+        ctx.shadowBlur = 0; // Reset shadow
+        ctx.textAlign = 'left'; // Reset alignment
+        
+        // Bird drawing logic
+        ctx.font = '34px Arial';
+        
+        if (this.magnet && this.magnetTimer>0){
+          // glow ring
+          ctx.beginPath();
+          ctx.arc(this.x+18, this.y+18, 28 + Math.sin(myGameArea.frameNo/6)*2, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,150,0.08)'; ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,120,0.35)'; ctx.stroke();
+          // floating magnet icon
+          ctx.font = '20px Arial';
+          ctx.fillText('🧲', this.x+12 + Math.sin(myGameArea.frameNo/6)*10, this.y - 6);
+        }
+        
+        // Blink effect when hit cooldown is active
+        // NOTE: The original code for checking hit cooldown based on index 'idx' inside a function that doesn't have 'idx' is incorrect.
+        // It relies on the player being passed in a loop elsewhere. We'll leave it as-is assuming the context handles it,
+        // but note this code is a placeholder/bug risk if not called correctly.
+        // if ((idx===0 && hitCooldownFrames1 > 0) || (idx===1 && hitCooldownFrames2 > 0)) {
+        //     if (myGameArea.frameNo % 6 < 3) ctx.globalAlpha = 0.4;
+        // }
+        
+        // Invulnerability glow/pulse
+        if (this.invuln > 0){
+             ctx.save();
+             ctx.globalAlpha = 0.3 + 0.3 * Math.abs(Math.sin(myGameArea.frameNo/4));
+             ctx.fillStyle = 'purple';
+             ctx.beginPath();
+             ctx.arc(this.x+18, this.y+18, 20, 0, Math.PI*2);
+             ctx.fill();
+             ctx.restore();
+        }
+        
+        ctx.fillText(this.frames[this.frameIndex], this.x, this.y + 28);
+        ctx.restore();
+        if (myGameArea.frameNo % 8 === 0) this.frameIndex = (this.frameIndex + 1) % this.frames.length;
+      };
+      this.newPos = ()=>{ 
+        this.gravitySpeed += this.gravity;
+        this.y += this.gravitySpeed;
+        // floor/ceiling
+        if (this.y > myGameArea.canvas.height - this.height) { this.y = myGameArea.canvas.height - this.height; this.gravitySpeed = 0; }
+        if (this.y < -10) { this.y = -10; this.gravitySpeed = 0; }
+      };
+      this.crashWith = other => {
+        return !(this.y + this.height < other.y || this.y > other.y + other.height ||
+                 this.x + this.width < other.x || this.x > other.x + other.width);
+      };
+    }
+
+    function component(width,height,color,x,y,type){
+      this.type = type; this.width = width; this.height = height;
+      this.x = x; this.y = y; this.speedX = 0; this.speedY = 0;
+      if (type === 'image' || type === 'background'){
+        this.image = new Image(); this.image.src = color;
+      }
+      this.update = ()=>{ 
+        const ctx = myGameArea.context;
+        if (type === 'image' || type==='background'){
+          ctx.drawImage(this.image,this.x,this.y,this.width,this.height);
+          if (type==='background' && this.x <= -this.width) ctx.drawImage(this.image,this.x+this.width,this.y,this.width,this.height);
+        } else if (type==='text'){
+          ctx.font = width + ' ' + height;
+          ctx.fillStyle = color;
+          ctx.fillText(this.text,this.x,this.y);
+        } else {
+          ctx.fillStyle = color;
+          ctx.fillRect(this.x,this.y,this.width,this.height);
+        }
+      };
+      this.newPos = ()=>{ this.x += this.speedX; if (type==='background' && this.x <= -this.width) this.x = 0; };
+    }
+
+    function coin(x,y){
+      this.width=26; this.height=26; this.x=x; this.y=y;
+      const chance=Math.random();
+      this.text = chance < 0.12 ? '💎' : '💿';
+      this.value = this.text==='💎'?10:1;
+      this.update = ()=>{ const ctx = myGameArea.context; ctx.font='22px Arial'; ctx.fillText(this.text,this.x,this.y+this.height); };
+      this.newPos = ()=> this.x -= obstacleSpeed;
+      this.crashWith = other => !(this.y + this.height < other.y ||
+                                  this.y > other.y + other.height ||
+                                  this.x + this.width < other.x ||
+                                  this.x > other.x + other.width);
+    }
+
+    function itemFactory(type, x, y){
+      // type: 'red', 'green', 'pink', 'gold', 'poison', 'healpot', 'rainbow', 'magnet'
+      const it = { x:x, y:y, width:28, height:28, type:type, vx:0, vy:0 };
+      if (type==='red'){ it.emoji='❤️'; it.rarity='common'; it.heal=1; }
+      else if (type==='green'){ it.emoji='💚'; it.rarity='uncommon'; it.heal=3; }
+      else if (type==='pink'){ it.emoji='💖'; it.rarity='rare'; it.heal=MAX_HEALTH; }
+      else if (type==='gold'){ it.emoji='💛'; it.rarity='veryrare'; it.temp=true; it.heal=1; it.duration=15*50; } // frames
+      else if (type==='poison'){ it.emoji='🧪'; it.rarity='common'; it.dmg=2; }
+      else if (type==='healpot'){ it.emoji='💊'; it.rarity='rare'; it.heal=2; }
+      else if (type==='rainbow'){ it.emoji='🟣'; it.rarity='veryrare'; it.invuln=10*50; }
+      else if (type==='magnet'){ it.emoji='🧲'; it.rarity='rare'; it.duration = MAGNET_DURATION_FRAMES; }
+      it.update = function(){ const ctx = myGameArea.context; ctx.font='24px Arial'; ctx.fillText(this.emoji, this.x, this.y+22); };
+      it.newPos = function(){ this.x -= obstacleSpeed; };
+      it.crashWith = other => !(this.y + this.height < other.y ||
+          this.y > other.y + other.height ||
+          this.x + this.width < other.x ||
+          this.x > other.x + other.width);
+      return it;
+    }
+
+    function createSpikeRow(x, baseY, widthPixels, pointingUp = false) {
+      const spikeWidth = 10;
+      const count = Math.floor(widthPixels / spikeWidth);
+      return {
+        x: x,
+        y: baseY,
+        width: widthPixels,
+        height: spikeWidth,
+        spikeCount: count,
+        pointingUp: pointingUp,
+        update() {
+          const ctx = myGameArea.context;
+          const diff = settings.difficulty;
+          let fill = '#b0b0b0';
+          if (diff === 'Easy') fill = '#c0d6a5';
+          else if (diff === 'Medium') fill = '#9fbf6b';
+          else fill = spikeEffectHardPulse ? `rgba(255,80,80,${0.6 + 0.4 * Math.abs(Math.sin(myGameArea.frameNo/6))})` : '#ff5c5c';
+
+          const spikeW = this.width / Math.max(1, this.spikeCount);
+          for (let i=0;i<this.spikeCount;i++){
+            const sx = this.x + i*spikeW;
+            if (this.pointingUp){
+              ctx.beginPath();
+              ctx.moveTo(sx, this.y);
+              ctx.lineTo(sx + spikeW/2, this.y - this.height - (settings.difficulty==='Hard'?4:0)*(Math.abs(Math.sin(myGameArea.frameNo/8))));
+              ctx.lineTo(sx + spikeW, this.y);
+              ctx.closePath();
+              ctx.fillStyle = fill; ctx.fill();
+              ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+            } else {
+              ctx.beginPath();
+              ctx.moveTo(sx, this.y);
+              ctx.lineTo(sx + spikeW/2, this.y + this.height + (settings.difficulty==='Hard'?4:0)*(Math.abs(Math.sin(myGameArea.frameNo/8))));
+              ctx.lineTo(sx + spikeW, this.y);
+              ctx.closePath();
+              ctx.fillStyle = fill; ctx.fill();
+              ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+            }
+          }
+        },
+        newPos() { this.x -= obstacleSpeed; },
+        crashWith(other) {
+          return !(other.y + other.height < this.y || other.y > this.y + this.height ||
+                   other.x + other.width < this.x || other.x > this.x + this.width);
+        }
+      };
+    }
+
+    function particle(x,y, vx, vy, life){
+      this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.life = life; this.age=0;
+      this.update = ()=>{ const ctx = myGameArea.context; this.x += this.vx; this.y += this.vy; this.vy += 0.12; this.age++; ctx.save(); ctx.translate(this.x, this.y); ctx.rotate((this.age/10) % (Math.PI*2)); ctx.fillStyle = ['#ff3b3b','#ffd23f','#7efc6f','#6ab0ff'][this.age % 4]; ctx.fillRect(-3,-3,6,6); ctx.restore(); };
+      this.isDead = ()=> this.age > this.life;
+    }
+
+    function drawPipe(ctx, x, y, w, h, flipped=false){
+      const grad = ctx.createLinearGradient(x, y, x, y + h);
+      grad.addColorStop(0, '#5cb85c');
+      grad.addColorStop(1, '#3d8b3d');
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = '#2f6f2f';
+      if (!flipped) ctx.fillRect(x-2, y + h - 18, w+4, 18);
+      else ctx.fillRect(x-2, y, w+4, 18);
+
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = '#ffffff';
+      for (let i=0;i<3;i++){
+        ctx.fillRect(x + 6 + i*10, y + 8, 6, Math.min(60, h-16));
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // NEW: Function to format time
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const milliseconds = Math.floor((ms % 1000) / 10); // show 2 digits
+
+        return `${String(minutes).padStart(2, '0')}:` +
+               `${String(seconds).padStart(2, '0')}.` +
+               `${String(milliseconds).padStart(2, '0')}`;
+    }
+    
+    // MAIN update loop
+    function updateGameArea(){
+      const gameRunning = player1Alive || player2Alive;
+
+      if (!gameRunning){
+        clearInterval(myGameArea.interval);
+        showWinner();
+        document.getElementById('restartBtn').style.display='inline';
+        return;
+      }
+
+      myGameArea.clear();
+      myGameArea.frameNo++;
+      backgroundComp.newPos();
+      backgroundComp.update();
+
+      // spawn obstacles & items
+      if (myGameArea.frameNo < 10000 && (myGameArea.frameNo === 1 || myGameArea.frameNo % spawnIntervalFrames === 0)){
+        const x = 980;
+        const height = Math.floor(Math.random()*220) + 80; // top pipe height
+        const gap = pipeGap;
+
+        // chance to make moving obstacle (uncommon ~25%)
+        const moving = Math.random() < 0.25;
+        const moveAmp = moving ? (settings.difficulty==='Easy'?18 : settings.difficulty==='Medium'?30:50) : 0;
+        const moveSpeed = moving ? (settings.difficulty==='Easy'?0.02:settings.difficulty==='Medium'?0.04:0.08) : 0;
+
+        myObstacles.push({
+          x: x, y: 0, w: 76, h: height, baseY:0, oscAmp:moveAmp, oscSpeed:moveSpeed,
+          update() { const ctx = myGameArea.context; const curY = this.baseY + (this.oscAmp? Math.sin(myGameArea.frameNo * this.oscSpeed)*this.oscAmp : 0); drawPipe(myGameArea.context, this.x, curY, this.w, this.h, false); this.drawY = curY; },
+          newPos() { this.x -= obstacleSpeed; }
+        });
+
+        myObstacles.push({
+          x: x-4, y: Math.max(0, height - 22), w: 84, h: 22,
+          update() {
+            const ctx = myGameArea.context;
+            ctx.fillStyle = '#2f6f2f';
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.strokeStyle='#133'; ctx.strokeRect(this.x, this.y, this.w, this.h);
+          },
+          newPos() { this.x -= obstacleSpeed; }
+        });
+
+        const topSpikeRow = createSpikeRow(x, height, 76, false);
+        const topDesiredCount = Math.max(1, Math.floor((76/10) * spikeDensity));
+        topSpikeRow.spikeCount = topDesiredCount;
+        mySpikes.push(topSpikeRow);
+
+        const bottomH = 540 - height - gap;
+        myObstacles.push({
+          x: x, y: height + gap, w: 76, h: bottomH, baseY: height + gap, oscAmp:moveAmp, oscSpeed:moveSpeed,
+          update() { const ctx = myGameArea.context; const curY = this.baseY + (this.oscAmp? Math.sin(myGameArea.frameNo * this.oscSpeed)*this.oscAmp : 0); drawPipe(myGameArea.context, this.x, curY, this.w, this.h, true); this.drawY = curY; },
+          newPos() { this.x -= obstacleSpeed; }
+        });
+
+        myObstacles.push({
+          x: x-4, y: height + gap, w: 84, h: 22,
+          update() {
+            const ctx = myGameArea.context;
+            ctx.fillStyle = '#2f6f2f';
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            ctx.strokeStyle='#133'; ctx.strokeRect(this.x, this.y, this.w, this.h);
+          },
+          newPos() { this.x -= obstacleSpeed; }
+        });
+
+        const bottomSpikeRow = createSpikeRow(x, height + gap, 76, true);
+        const bottomDesiredCount = Math.max(1, Math.floor((76/10) * spikeDensity));
+        bottomSpikeRow.spikeCount = bottomDesiredCount;
+        mySpikes.push(bottomSpikeRow);
+
+        // spawn coins/items in pipe gap (3 positions)
+        const midY = height + gap/2;
+        for (let i=-1;i<=1;i++){
+          const spawnRand = Math.random();
+          // if power-ups enabled
+          if (settings.powerUps === 'On' && spawnRand < 0.22){
+            // spawn heart/potion/magnet according to rarities
+            const r = Math.random();
+            if (r < itemSettings.heartChances.red) myItems.push(itemFactory('red', x+14, midY + i*18));
+            else if (r < itemSettings.heartChances.red + itemSettings.heartChances.green) myItems.push(itemFactory('green', x+14, midY + i*18));
+            else if (r < itemSettings.heartChances.red + itemSettings.heartChances.green + itemSettings.heartChances.pink) myItems.push(itemFactory('pink', x+14, midY + i*18));
+            else if (r < itemSettings.heartChances.red + itemSettings.heartChances.green + itemSettings.heartChances.pink + itemSettings.heartChances.gold) myItems.push(itemFactory('gold', x+14, midY + i*18));
+            else {
+              // potion or magnet
+              const p = Math.random();
+              if (p < itemSettings.potionChances.poison) myItems.push(itemFactory('poison', x+14, midY + i*18));
+              else if (p < itemSettings.potionChances.poison + itemSettings.potionChances.heal) myItems.push(itemFactory('healpot', x+14, midY + i*18));
+              else if (p < itemSettings.potionChances.poison + itemSettings.potionChances.heal + itemSettings.potionChances.rainbow) myItems.push(itemFactory('rainbow', x+14, midY + i*18));
+              else if (Math.random() < itemSettings.magnetChance) myItems.push(itemFactory('magnet', x+14, midY + i*18));
+              else myCoins.push(new coin(x+14, midY + i*18));
+            }
+          } else {
+            myCoins.push(new coin(x+14, midY + i*18));
+          }
+        }
+      }
+
+      if (myGameArea.frameNo === 1100){
+        endPlatform = { x: 980, y: 480, w: 220, h: 20, update() {
+          const ctx = myGameArea.context;
+          ctx.fillStyle = '#222';
+          ctx.fillRect(this.x, this.y, this.w, this.h);
+          ctx.fillStyle = '#444';
+          ctx.fillRect(this.x + 80, this.y - 30, 60, 30);
+        }, newPos() { this.x -= obstacleSpeed; }
+        };
+        endFlag = { x: 980+170, y: 440, w: 8, h: 40, update() {
+          const ctx = myGameArea.context;
+          const sway = Math.sin(myGameArea.frameNo/6) * 6;
+          ctx.fillStyle = '#333'; ctx.fillRect(this.x, this.y, 4, this.h);
+          ctx.fillStyle = '#ffcc00';
+          ctx.beginPath();
+          ctx.moveTo(this.x+4, this.y+6);
+          ctx.lineTo(this.x+4+24 + sway, this.y+12);
+          ctx.lineTo(this.x+4, this.y+20);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle='#333'; ctx.stroke();
+        }, newPos() { this.x -= obstacleSpeed; }
+        };
+      }
+
+      for (let i=myObstacles.length-1;i>=0;i--){
+        const o = myObstacles[i];
+        if (o.newPos) o.newPos();
+        if (o.update) o.update();
+        if (o.x + (o.w||80) < -50) myObstacles.splice(i,1);
+      }
+
+      for (let i=mySpikes.length-1;i>=0;i--){
+        const s = mySpikes[i];
+        if (s.newPos) s.newPos();
+        if (s.update) s.update();
+        if (s.x + s.width < -50) mySpikes.splice(i,1);
+      }
+
+      // update items & coins
+      for (let i=0;i<myCoins.length;i++){
+        myCoins[i].newPos(); myCoins[i].update();
+        if (player1Alive && player1.crashWith(myCoins[i])) { 
+            if (myCoins[i].text === '💎') diamondsCollectedP1++; else coinsCollectedP1 += myCoins[i].value; 
+            myCoins.splice(i--,1); 
+        }
+        else if (player2Alive && player2.crashWith(myCoins[i])) { 
+            if (myCoins[i].text === '💎') diamondsCollectedP2++; else coinsCollectedP2 += myCoins[i].value; 
+            myCoins.splice(i--,1); 
+        }
+      }
+
+      // items movement & magnet attraction
+      for (let i=0;i<myItems.length;i++){
+        const it = myItems[i];
+        // default movement
+        it.newPos(); it.update();
+
+        // magnet attraction: for each player with magnet active, attract items within radius
+        [ {pl:player1, alive:player1Alive, hpRef:'hp1'}, {pl:player2, alive:player2Alive, hpRef:'hp2'} ].forEach(obj=>{
+          const pl = obj.pl;
+          if (!obj.alive || !pl) return;
+          if (pl.magnet && pl.magnetTimer>0){
+            const dx = (pl.x+pl.width/2) - it.x;
+            const dy = (pl.y+pl.height/2) - it.y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d < MAGNET_RADIUS){
+              // pull item toward player
+              it.x += dx * 0.08;
+              it.y += dy * 0.08;
+            }
+          }
+        });
+
+        // check collisions with players
+        if (player1Alive && player1.crashWith(it)){
+          collectItem(1, it);
+          myItems.splice(i--,1);
+          continue;
+        } else if (player2Alive && player2.crashWith(it)){
+          collectItem(2, it);
+          myItems.splice(i--,1);
+          continue;
+        }
+      }
+
+      if (endPlatform) { endPlatform.newPos(); endPlatform.update(); }
+      if (endFlag) { endFlag.newPos(); endFlag.update(); }
+
+      for (let i=particles.length-1;i>=0;i--){
+        particles[i].update();
+        if (particles[i].isDead()) particles.splice(i,1);
+      }
+
+      if (hitCooldownFrames1 > 0) hitCooldownFrames1--;
+      if (hitCooldownFrames2 > 0) hitCooldownFrames2--;
+
+      // players loop (both players)
+      [player1, player2].forEach((pl, idx)=> {
+        if ((idx===0 && !player1Alive) || (idx===1 && !player2Alive)) return;
+
+        for (let j=0;j<myObstacles.length;j++){
+          const o = myObstacles[j];
+          // adjust obstacle box for oscillation if present
+          const oY = (typeof o.drawY !== 'undefined') ? o.drawY : o.y;
+          if (pl.crashWith({ x:o.x, y:oY, width: o.w||o.width||76, height: o.h||o.height||20 })){
+            if (((idx===0 && hitCooldownFrames1===0) || (idx===1 && hitCooldownFrames2===0)) && pl.invuln===0){
+              const dmg = damageMap[settings.difficulty] || 1;
+              if (idx===0) { hp1 -= dmg; hitCooldownFrames1 = 30; if (hp1 <= 0) { player1Alive = false; eliminationFrame1 = myGameArea.frameNo; } }
+              else { hp2 -= dmg; hitCooldownFrames2 = 30; if (hp2 <= 0) { player2Alive = false; eliminationFrame2 = myGameArea.frameNo; } }
+              pl.y += (idx===0? 6 : -6);
+            }
+          }
+        }
+
+        for (let s=0;s<mySpikes.length;s++){
+          const spike = mySpikes[s];
+          if (spike.crashWith({ x:pl.x, y:pl.y, width:pl.width, height:pl.height })){
+            if (((idx===0 && hitCooldownFrames1===0) || (idx===1 && hitCooldownFrames2===0)) && pl.invuln===0){
+              const dmg = damageMap[settings.difficulty] || 1;
+              if (idx===0) { hp1 -= dmg; hitCooldownFrames1 = 30; if (hp1 <= 0) { player1Alive = false; eliminationFrame1 = myGameArea.frameNo; } }
+              else { hp2 -= dmg; hitCooldownFrames2 = 30; if (hp2 <= 0) { player2Alive = false; eliminationFrame2 = myGameArea.frameNo; } }
+              pl.y += spike.pointingUp ? -12 : 12;
+              for (let p=0;p<8;p++){
+                particles.push(new particle(pl.x + pl.width/2, pl.y + pl.height/2, (Math.random()-0.5)*4, -Math.random()*3, 30 + Math.random()*30));
+              }
+            }
+          }
+        }
+
+        if (endPlatform && endFlag){
+          const goalBox = { x: endFlag.x - 10, y: endFlag.y, width: 36, height: endFlag.h + 10 };
+          if (pl.crashWith(goalBox)){
+            if (idx===0 && player1Alive){ 
+                coinsCollectedP1 += 50; 
+                eliminationFrame1 = myGameArea.frameNo; 
+                player1Alive = false;
+                player2Alive = false; // End game immediately
+                gameEndedByWin = true; 
+            } else if (idx===1 && player2Alive){ 
+                coinsCollectedP2 += 50; 
+                eliminationFrame2 = myGameArea.frameNo; 
+                player2Alive = false;
+                player1Alive = false; // End game immediately
+                gameEndedByWin = true; 
+            }
+            for (let k=0;k<60;k++){
+              particles.push(new particle(goalBox.x + Math.random()*goalBox.width, goalBox.y + 10, (Math.random()-0.5)*6, -Math.random()*6 - 2, 60 + Math.random()*40));
+            }
+          }
+        }
+
+        if ((idx===0 && player1Alive) || (idx===1 && player2Alive)){
+          pl.newPos();
+          pl.update();
+        }
+
+        // timers for player buffs
+        if (idx===0){
+          if (player1.invuln>0) player1.invuln--;
+          if (player1.magnet && player1.magnetTimer>0) player1.magnetTimer--;
+          if (player1.magnetTimer<=0) player1.magnet=false;
+          if (player1.tempHp && tempHpExpire1>0) tempHpExpire1--; else if (tempHpExpire1<=0 && player1.tempHp>0){ player1.tempHp=0; if (hp1>MAX_HEALTH) hp1 = MAX_HEALTH; }
+        } else {
+          if (player2.invuln>0) player2.invuln--;
+          if (player2.magnet && player2.magnetTimer>0) player2.magnetTimer--;
+          if (player2.magnetTimer<=0) player2.magnet=false;
+          if (player2.tempHp && tempHpExpire2>0) tempHpExpire2--; else if (tempHpExpire2<=0 && player2.tempHp>0){ player2.tempHp=0; if (hp2>MAX_HEALTH) hp2 = MAX_HEALTH; }
+        }
+      });
+
+      // Update score display with custom player names
+      // MODIFIED: Added real-time timer display
+      const elapsedTime = Date.now() - myGameArea.startTime;
+      const formattedTimer = formatTime(elapsedTime);
+      
+      score1.text = `${settings.p1Name.substring(0,6)}: ${player1Alive ? formattedTimer : 'OUT'}  💿:${coinsCollectedP1} 💎:${diamondsCollectedP1}`;
+      score2.text = `${settings.p2Name.substring(0,6)}: ${player2Alive ? formattedTimer : 'OUT'}  💿:${coinsCollectedP2} 💎:${diamondsCollectedP2}`;
+      score1.update(); score2.update();
+
+      updateHealthHUD();
+
+      // cleanup far-left items/coins
+      for (let i=myCoins.length-1;i>=0;i--) if (myCoins[i].x < -30) myCoins.splice(i,1);
+      for (let i=myItems.length-1;i>=0;i--) if (myItems[i].x < -60) myItems.splice(i,1);
+    }
+
+    function collectItem(playerIdx, it){
+      const idx = playerIdx;
+      const pl = (idx===1) ? player1 : player2;
+      const currentHpRef = (idx===1) ? hp1 : hp2;
+      
+      let newHp = currentHpRef;
+
+      if (it.type==='red'){ newHp = Math.min(MAX_HEALTH + (pl.tempHp||0), newHp + it.heal); }
+      else if (it.type==='green'){ newHp = Math.min(MAX_HEALTH + (pl.tempHp||0), newHp + it.heal); }
+      else if (it.type==='pink'){ newHp = MAX_HEALTH + (pl.tempHp||0); }
+      else if (it.type==='gold'){
+        if (idx===1){ player1.tempHp = 1; newHp = Math.min(MAX_HEALTH + 1, hp1 + 1); tempHpExpire1 = it.duration; }
+        else { player2.tempHp = 1; newHp = Math.min(MAX_HEALTH + 1, hp2 + 1); tempHpExpire2 = it.duration; }
+      }
+      else if (it.type==='poison'){ newHp -= it.dmg; }
+      else if (it.type==='healpot'){ newHp = Math.min(MAX_HEALTH + (pl.tempHp||0), newHp + it.heal); }
+      else if (it.type==='rainbow'){ pl.invuln = it.invuln; }
+      else if (it.type==='magnet'){ pl.magnet = true; pl.magnetTimer = it.duration; }
+      
+      // Update the correct player's HP
+      if (idx===1) { hp1 = newHp; if (hp1 <= 0) player1Alive = false; }
+      else { hp2 = newHp; if (hp2 <= 0) player2Alive = false; }
+
+
+      // after collect, spawn some particles
+      for (let p=0;p<10;p++) particles.push(new particle(it.x + Math.random()*10, it.y + Math.random()*10, (Math.random()-0.5)*3, -Math.random()*2, 30 + Math.random()*30));
+    }
+
+    function updateHealthHUD(){
+      const hearts = (n) => {
+        let s = '';
+        const full = '❤️'; const empty = '🤍';
+        const temp = '💛';
+        for (let i=0;i<MAX_HEALTH;i++) s += (i < Math.min(n,MAX_HEALTH) ? full : empty) + ' ';
+        if (n>MAX_HEALTH) s += temp + ' ';
+        return s;
+      };
+      // Use custom player names in HUD
+      document.getElementById('healthP1').innerHTML = `${settings.p1Name} HP: ${hearts(Math.max(0, hp1))}`;
+      document.getElementById('healthP2').innerHTML = `${settings.p2Name} HP: ${hearts(Math.max(0, hp2))}`;
+      // MODIFIED: Remove frame count from HUD title, as score display shows the real-time timer
+      document.getElementById('scoreDisplay').innerHTML = `<strong>Score</strong> <div class="small">Timer: ${formatTime(Date.now() - (myGameArea.startTime||Date.now()))}</div>`;
+      document.getElementById('scoreDisplay2').innerHTML = `<strong>Score</strong> <div class="small">Timer: ${formatTime(Date.now() - (myGameArea.startTime||Date.now()))}</div>`;
+    }
+
+    function showWinner(){
+      // Final elapsed time
+      const finalTimeMs = Date.now() - myGameArea.startTime;
+      const finalTimeFormatted = formatTime(finalTimeMs);
+      
+      const w = document.getElementById('winner');
+      let finalFrame1 = player1Alive ? myGameArea.frameNo : (eliminationFrame1||0);
+      let finalFrame2 = player2Alive ? myGameArea.frameNo : (eliminationFrame2||0);
+      
+      // MODIFIED: Display final time instead of just frame count
+      let msg = `🎖️ Game Over!<br>${settings.p1Name} Final Time: ${finalTimeFormatted} | ${settings.p2Name} Score: ${finalFrame2}<br>`; 
+
+      // Update High Scores (High scores still based on frames survived, as it's a constant metric)
+      if (finalFrame1 > highScore1){ highScore1 = finalFrame1; localStorage.setItem('highScoreP1', highScore1); }
+      if (finalFrame2 > highScore2){ highScore2 = finalFrame2; localStorage.setItem('highScoreP2', highScore2); }
+      
+      // Update Total Currency
+      if (coinsCollectedP1 > 0){ totalCoinsP1 += coinsCollectedP1; localStorage.setItem('totalCoinsP1', totalCoinsP1); }
+      if (coinsCollectedP2 > 0){ totalCoinsP2 += coinsCollectedP2; localStorage.setItem('totalCoinsP2', totalCoinsP2); }
+      if (diamondsCollectedP1 > 0){ totalDiamondsP1 += diamondsCollectedP1; localStorage.setItem('totalDiamondsP1', totalDiamondsP1); }
+      if (diamondsCollectedP2 > 0){ totalDiamondsP2 += diamondsCollectedP2; localStorage.setItem('totalDiamondsP2', totalDiamondsP2); }
+
+
+      if (gameEndedByWin){
+        // Only one player can win by reaching the flag, as we set both to !alive
+        if (!player2Alive && finalFrame1 > finalFrame2){ 
+            msg += `🎉 ${settings.p1Name} reached the goal in ${finalTimeFormatted}! (+50 Coins)`; winsP1++; localStorage.setItem('winsP1', winsP1); 
+        }
+        else if (!player1Alive && finalFrame2 > finalFrame1){ 
+            msg += `🎉 ${settings.p2Name} reached the goal in ${finalTimeFormatted}! (+50 Coins)`; winsP2++; localStorage.setItem('winsP2', winsP2); 
+        }
+        else { msg += "🤝 Both players survived to the end but failed the flag!"; }
+      } else if (finalFrame1 > finalFrame2){
+        msg += `🏆 ${settings.p1Name} Survived Longer! (Time: ${finalTimeFormatted})`; winsP1++; localStorage.setItem('winsP1', winsP1);
+      } else if (finalFrame2 > finalFrame1){
+        msg += `🏆 ${settings.p2Name} Survived Longer! (Time: ${finalTimeFormatted})`; winsP2++; localStorage.setItem('winsP2', winsP2);
+      } else {
+        msg += "🤝 It's a Tie! (Simultaneous elimination or win)";
+      }
+      w.innerHTML = msg;
+      updateHighScoresDisplay();
+    }
+
+    function movePlayer1(n){ if (player1Alive) player1.gravity = n; }
+    function movePlayer2(n){ if (player2Alive) player2.gravity = n; }
+    // NEW: Speed boost functions
+    function movePlayer1Boost(n){ if (player1Alive && !isMobile) player1.gravity = n; } // Disable speed boost if using mobile buttons
+    function movePlayer2Boost(n){ if (player2Alive && !isMobile) player2.gravity = n; } // Disable speed boost if using mobile buttons
+    
+    function resetProgress(){ localStorage.clear(); location.reload(); }
+
+    document.addEventListener('keydown', e=>{
+      // Player 1 Flap
+      if (e.key === 'w') movePlayer1(-0.22);
+      // Player 2 Flap
+      if (e.key === 'ArrowUp') movePlayer2(-0.22);
+      
+      // NEW: P1 Speed Boost
+      if (e.key === 's') movePlayer1Boost(-0.8);
+
+      // NEW: P2 Speed Boost
+      // NOTE: Changing 'Space' from P1 flap to P2 speed boost per request
+      if (e.code === 'Space') movePlayer2Boost(-0.8);
+    });
+    document.addEventListener('keyup', e=>{
+      // Player 1 Flap
+      if (e.key === 'w') movePlayer1(0.09);
+      // Player 2 Flap
+      if (e.key === 'ArrowUp') movePlayer2(0.09);
+      
+      // NEW: P1 Speed Boost Release
+      if (e.key === 's') movePlayer1(0.09);
+
+      // NEW: P2 Speed Boost Release
+      if (e.code === 'Space') movePlayer2(0.09);
+    });
+  </script>
+
+  <button onclick="applySettings()" style="position:fixed;top:10px;right:10px;z-index:1000;">
+    🎵 Toggle Music
+  </button>
+
+</body>
+</html>
