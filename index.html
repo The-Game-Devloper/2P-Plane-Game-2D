@@ -7,7 +7,9 @@
     body { margin:0; background: linear-gradient(#87CEEB, #E0FFFF); font-family:Arial, sans-serif; }
     /* The canvas background will be controlled by the user setting */
     canvas { border:2px solid #222; display:block; margin:14px auto; background:transparent; }
-    #homeScreen, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup { text-align:center; }
+    #homeScreen, #gameContainer, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup { text-align:center; }
+    #settingsPopup { text-align:left; }
+    #settingsPopup h2 { text-align:center; margin-top:0; }
     #controls, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup { display:none; }
     #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup {
       position:fixed; top:12%; left:50%; transform:translateX(-50%);
@@ -182,8 +184,19 @@
         <option value="Off">Off</option>
       </select>
     </div>
-    <button onclick="closeSettings()">Save & Close</button>
-    <button onclick="resetProgress()">🔄 Reset Progress</button>
+    <div>
+      <label for="deviceType">Device:</label>
+      <select id="deviceType">
+        <option value="Auto">Auto Detect</option>
+        <option value="Desktop">Desktop</option>
+        <option value="Tablet">Tablet</option>
+        <option value="Mobile">Mobile Phone</option>
+      </select>
+    </div>
+    <div style="text-align:center; margin-top:15px;">
+      <button onclick="closeSettings()">Save & Close</button>
+      <button onclick="resetProgress()">🔄 Reset Progress</button>
+    </div>
   </div>
 
   <div id="aboutPopup">
@@ -279,7 +292,7 @@
     <div id="controls">
       <button onmousedown="movePlayer1(-0.22)" onmouseup="movePlayer1(0.06)" ontouchstart="movePlayer1(-0.22)" ontouchend="movePlayer1(0.06)">P1 UP</button>
       <button onmousedown="movePlayer1Boost(-0.8)" onmouseup="movePlayer1(0.06)" ontouchstart="movePlayer1Boost(-0.8)" ontouchend="movePlayer1(0.06)">P1 SPEED</button>
-
+ ......................................................................................................................................................
       <button onmousedown="movePlayer2(-0.22)" onmouseup="movePlayer2(0.06)" ontouchstart="movePlayer2(-0.22)" ontouchend="movePlayer2(0.06)">P2 JUMP</button>
       <button onmousedown="movePlayer2Boost(-0.8)" onmouseup="movePlayer2(0.06)" ontouchstart="movePlayer2Boost(-0.8)" ontouchend="movePlayer2(0.06)">P2 SPEED</button>
     </div>
@@ -287,7 +300,7 @@
   </div>
 
   <audio id="bgMusic" loop>
-    <source src="roblox-minecraft-fortnite-video-game-music-299145.mp3" type="audio/mpeg">
+    <source src="music.mp3" type="audio/mpeg">
   </audio>
 
   <script>
@@ -300,7 +313,8 @@
       powerUps: 'On',
       p1Name: 'Player 1', // New setting
       p2Name: 'Player 2', // New setting
-      bgColor: '#87CEEB' // New setting
+      bgColor: '#87CEEB', // New setting
+      deviceType: 'Auto' // New setting for device selection
     };
     
     // NEW: Game Mode tracking
@@ -314,11 +328,14 @@
       document.getElementById('difficulty').value = settings.difficulty;
       document.getElementById('musicToggle').value = settings.music;
       document.getElementById('powerUpsToggle').value = settings.powerUps;
+      document.getElementById('deviceType').value = settings.deviceType;
       
       // Customization popup fields
       document.getElementById('p1Name').value = settings.p1Name;
       document.getElementById('p2Name').value = settings.p2Name;
       document.getElementById('bgColor').value = settings.bgColor;
+
+      // No longer need mobile mode toggle
     }
     
     function saveSettings() {
@@ -326,6 +343,7 @@
       settings.difficulty = document.getElementById('difficulty').value;
       settings.music = document.getElementById('musicToggle').value;
       settings.powerUps = document.getElementById('powerUpsToggle').value;
+      settings.deviceType = document.getElementById('deviceType').value;
 
       // Customization popup save
       // Ensure names are trimmed and default if empty
@@ -467,21 +485,26 @@
       closeCustomMode(); // Close the mode selection popup
       currentMode = mode;
       
-      // Determine if we show mobile controls based on screen size, not just mode selection
-      // We will now rely on the game to handle desktop key events regardless
-      // isMobile = (mode === 'mobile'); // Keeping this line commented as it was confusing
+      // Determine if we show mobile controls based on device type setting
+      if (settings.deviceType === 'Auto') {
+        // Auto-detect based on screen size
+        isMobile = window.innerWidth < 1000;
+      } else if (settings.deviceType === 'Desktop') {
+        // Desktop: never show mobile controls
+        isMobile = false;
+      } else {
+        // Tablet or Mobile: always show mobile controls
+        isMobile = true;
+      }
 
       document.getElementById('homeScreen').style.display='none';
       document.getElementById('gameContainer').style.display='block';
       
-      // Check screen width to determine if mobile controls should be displayed
-      // And we now include the speed boost buttons for mobile
-      if (window.innerWidth < 1000) { 
+      // Show or hide mobile controls based on isMobile flag
+      if (isMobile) { 
           document.getElementById('controls').style.display='flex'; // Use flex to space buttons
-          isMobile = true;
       } else {
           document.getElementById('controls').style.display='none';
-          isMobile = false;
       }
 
       // The core game logic (Flappy Bird to the end flag) is now the "racing" mode.
@@ -562,7 +585,7 @@
     const myGameArea = {
       canvas: document.createElement('canvas'),
       start() {
-        this.canvas.width = 960; this.canvas.height = 540;
+        this.canvas.width = 960; this.canvas.height = 500;
         this.context = this.canvas.getContext('2d');
         // FIX: Insert canvas into gameContainer instead of body.firstChild
         const gameContainer = document.getElementById('gameContainer');
