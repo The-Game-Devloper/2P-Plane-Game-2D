@@ -177,58 +177,28 @@
     <button onclick="resetProgress()">🔄 Reset Everything</button>
   </div>
 
-   <div class="about-section">
+  <div id="aboutPopup">
+    <h2>ℹ️ About / How to Play</h2>
+    <div class="scrollable-content"> 
+      <div class="about-section">
+        <h4>Game Overview</h4>
+        <p>This is a challenging two-player version of the classic Flappy Bird game, enhanced with health bars, power-ups, and multiple difficulties. The goal is to survive the longest or reach the end flag first.</p>
+        <p class="about-emojis"><strong>Health:</strong> ❤️❤️❤️ ... (9 HP) — each player starts with <strong>9 HP</strong>.</p>
+        <p><strong>Goal:</strong> Fly through the pipes, collect coins, hearts and potions, use the magnet and reach the animated flag at the end to win. Avoid pipes and spikes.</p>
+      </div>
+      <div class="about-section">
+        <h4>Custom Modes</h4>
+        <ul>
+          <li><strong>1 RACING:</strong> Classic Flappy Bird, but the first player to reach the animated end flag wins the round!</li>
+        </ul>
+      </div>
+      <div class="about-section">
         <h4>Controls</h4>
         <ul>
           <li><strong>Desktop:</strong> Player 1 — <code>W</code> (flap), <code>S</code> (speed boost). Player 2 — <code>↑ Arrow</code> (flap), <code>Space</code> (speed boost).</li>
-          <li><strong>Mobile:</strong> Use the on-screen <em>P1 UP</em> and <em>P2 JUMP</em> buttons. (Speed boost not available on mobile controls).</li>
+          <li><strong>Mobile:</strong> Use the on-screen <em>P1 UP</em> and <em>P2 JUMP</em> buttons.</li>
         </ul>
       </div>
-
-      <div class="about-section">
-        <h4>New Items & Power-ups</h4>
-        <table class="damage">
-          <thead>
-            <tr><th>Item</th><th>Effect</th><th>Rarity</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>❤️ Red Heart</td><td>+1 HP</td><td>Common</td></tr>
-            <tr><td>💚 Green Heart</td><td>+3 HP</td><td>Uncommon</td></tr>
-            <tr><td>💖 Pink Heart</td><td>Refill full HP</td><td>Rare</td></tr>
-            <tr><td>💛 Golden Heart</td><td>+1 Temporary HP (15s)</td><td>Very Rare</td></tr>
-            <tr><td>🧪 Purple Potion</td><td>-2 HP (Poison)</td><td>Common</td></tr>
-            <tr><td>💊  Blue Potion</td><td>+2 HP (Healing)</td><td>Rare</td></tr>
-            <tr><td>🟣 Rainbow Potion</td><td>Invulnerability 10s</td><td>Very Rare</td></tr>
-            <tr><td>🧲 Magnet</td><td>Attracts coins/hearts/potions for 15s</td><td>Rare</td></tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="about-section">
-        <h4>Spike & Pipe Damage (per difficulty)</h4>
-        <table class="damage">
-          <thead>
-            <tr><th>Difficulty</th><th>Spike Damage</th><th>Pipe Hit Damage</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Easy</td><td>1 HP (❤️)</td><td>1 HP</td><td>Few spikes, gentle colors — forgiving play.</td></tr>
-            <tr><td>Medium</td><td>2 HP (💔💔)</td><td>2 HP</td><td>More spikes and darker color — watch gaps closely.</td></tr>
-            <tr><td>Hard</td><td>Instant kill (9 HP) — lethal</td><td>Instant kill (9 HP)</td><td>Dense spikes, red pulsing spikes — extremely challenging.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="about-section">
-        <h4>Tips</h4>
-        <ul>
-          <li>Collect coins (💿) and diamonds (💎) to increase your total currency — helpful for unlocks later.</li>
-          <li>Collect hearts and potions to restore HP or gain temporary buffs.</li>
-          <li>Golden heart grants temporary HP that can exceed your max for 15 seconds.</li>
-          <li>Magnet attracts nearby items — look for the glowing aura and magnet icon around your bird when active.</li>
-          <li>Moving obstacles appear sometimes — watch for pipes/spikes that move vertically or horizontally.</li>
-        </ul>
-      </div>
-      
       <div style="text-align:right; margin-top:8px;">
         <button onclick="closeAbout()">Close</button>
       </div>
