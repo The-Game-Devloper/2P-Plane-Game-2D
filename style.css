@@ -1,0 +1,170 @@
+body { 
+  margin: 0; 
+  background: linear-gradient(#87CEEB, #E0FFFF); 
+  font-family: Arial, sans-serif; 
+}
+
+canvas { 
+  border: 2px solid #222; 
+  display: block; 
+  margin: 14px auto; 
+  background: transparent; 
+}
+
+#homeScreen, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup, #equipmentPopup, #shopPopup, #bankPopup { 
+  text-align: center; 
+}
+
+#controls, #gameContainer, #settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup, #equipmentPopup, #shopPopup, #bankPopup { 
+  display: none; 
+}
+
+#settingsPopup, #aboutPopup, #customizationPopup, #statsPopup, #customModePopup, #equipmentPopup, #shopPopup, #bankPopup {
+  position: fixed; 
+  top: 10%; 
+  left: 50%; 
+  transform: translateX(-50%);
+  width: 540px; 
+  background: white; 
+  border: 2px solid #333; 
+  padding: 18px; 
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+  border-radius: 8px;
+}
+
+#homeScreen button {
+  margin: 10px 10px; 
+  font-size: 16px; 
+  padding: 12px 20px; 
+  cursor: pointer;
+  border-radius: 8px; 
+  border: 3px solid #0056b3;
+  background: linear-gradient(to bottom, #007BFF, #0056b3);
+  color: white; 
+  font-weight: bold; 
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 #0056b3; 
+  transition: all 0.1s ease;
+}
+
+#homeScreen button:active {
+  box-shadow: 0 1px 0 #0056b3;
+  transform: translateY(3px);
+}
+
+#homeScreen .shop-trigger-btn {
+  background: linear-gradient(to bottom, #FF9F1C, #D87A00);
+  border-color: #D87A00;
+  box-shadow: 0 4px 0 #D87A00;
+}
+
+button, select, label, input {
+  margin: 6px; 
+  font-size: 15px; 
+  padding: 8px 12px; 
+  border-radius: 6px;
+}
+
+button { 
+  cursor: pointer; 
+  border: none; 
+}
+
+button:hover { 
+  transform: translateY(-1px); 
+  opacity: 0.95; 
+}
+
+#controls button { background: #0b84ff; color: white; }
+#settingsPopup button { background: #ff6b6b; color: white; }
+#customizationPopup button { background: #007BFF; color: white; } 
+#statsPopup button { background: #6c757d; color: white; }
+
+#customModePopup .mode-btn {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(to right, #4CAF50, #45a049);
+  color: white;
+  border: 2px solid #38761D;
+  border-radius: 6px;
+}
+
+.health { font-size: 20px; margin: 6px 0; color: #222; }
+#hud { display: flex; justify-content: space-between; align-items: center; width: 920px; margin: 8px auto; color: #222; }
+#winner { font-size: 20px; margin-top: 8px; font-weight: bold; }
+#restartBtn { display: none; padding: 8px 14px; margin-top: 10px; }
+.small { font-size: 12px; color: #444; }
+
+table.damage, .shop-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+table.damage td, table.damage th, .shop-table td, .shop-table th { border: 1px solid #ddd; padding: 6px; text-align: center; }
+table.damage th, .shop-table th { background: #f7f7f7; }
+
+.scrollable-content {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 8px;
+  text-align: left;
+}
+
+.about-section { margin-top: 8px; line-height: 1.35; }
+#customizationPopup input, #customizationPopup select { width: calc(100% - 24px); } 
+
+/* Shop UI Adjustments */
+.shop-wallets {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 12px;
+}
+.wallet-box {
+  background: #f1f3f5;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  border: 1px solid #dee2e6;
+}
+.buy-btn {
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.buy-btn.unlocked {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Equipment Loadout Settings */
+.equip-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+.equip-column {
+  width: 48%;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 10px;
+  text-align: left;
+}
+.equip-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 6px;
+  margin: 4px 0;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+.equip-item label {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  cursor: pointer;
+}
